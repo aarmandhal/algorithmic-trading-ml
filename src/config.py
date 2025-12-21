@@ -1,32 +1,25 @@
+import os
+from dotenv import load_dotenv
+
 
 def load_environment_variables():
     # Load environment variables from .env file
     # Keeps sensitive data like API keys out of version control
     pass
 
-def get_database_path():
-    # Return file path to SQLite database
-    # Allows easy switching between dev/test/prod databases
+def get_database_config():
+    # Retrieve database configuration from environment variables
     pass
 
-def get_data_start_date():
-    # Return default start date for data fetching
+def get_database_url():
+    # Construct database URL from config
     pass
 
-def get_default_tickers():
-    # Return list of default stock tickers to analyze
+def get_connection_pool_size():
+    # Get connection pool size from env or default
     pass
 
-def get_transaction_cost():
-    # Return default transaction cost per trade
-    pass
-
-def get_slippage():
-    # Return default slippage percentage
-    # Accounts for difference between expected and actual execution prices
-    pass
-
-def get_initial_capital():
-    # Return default initial capital for backtesting
+def validate_database_config():
+    # Validate required database config parameters
     pass
 
