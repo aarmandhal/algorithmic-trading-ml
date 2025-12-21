@@ -1,7 +1,13 @@
+# Environment variables - NEVER COMMIT THESE
+.env
+.env.local
+*.env
+
 # Virtual Environment
 venv/
 env/
 ENV/
+.venv/
 
 # Python
 __pycache__/
@@ -9,24 +15,29 @@ __pycache__/
 *$py.class
 *.so
 .Python
+build/
+dist/
+*.egg-info/
 
-# Jupyter
+# Jupyter Notebooks
 .ipynb_checkpoints/
-*.ipynb_checkpoints
 
-# Data
+# Data files
 *.db
 *.csv
-data/raw/
-data/processed/
+*.xlsx
+data/
+!data/.gitkeep
+
+# macOS
+.DS_Store
 
 # IDE
 .vscode/
 .idea/
+*.swp
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Environment variables
-.env
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
