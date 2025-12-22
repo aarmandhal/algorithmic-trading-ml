@@ -1,23 +1,16 @@
 import psycopg2
-import os
-from dotenv import load_dotenv
-load_dotenv()
-
-DB_NAME = os.getenv("DB_NAME")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
+from src.config import get_database_config
 
 
 def create_connection():
     # Create connection pool to the database
+    db_config = get_database_config()
     conn = psycopg2.connect(
-        dbname=DB_NAME,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        host=DB_HOST,
-        port=DB_PORT
+        dbname=db_config["name"],
+        user=db_config["user"],
+        password=db_config["password"],
+        host=db_config["host"],
+        port=db_config["port"]
     )
     return conn
 
