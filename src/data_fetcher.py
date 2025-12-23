@@ -14,7 +14,7 @@ def fetch_stock_data(ticker, start_date, end_date):
 
 def fetch_multiple_tickers(ticker_list, start_date, end_date):
     # Fetch data for multiple tickers and concatenate
-    # Returns dictionary with ticker as key and dataframe as value
+    # Dataframe with data from all tickers
     dfs = []
     for ticker in ticker_list:
         data = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False, multi_level_index=False)
