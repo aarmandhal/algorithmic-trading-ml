@@ -17,7 +17,7 @@ def fetch_multiple_tickers(ticker_list, start_date, end_date):
     # Returns dictionary with ticker as key and dataframe as value
     dfs = []
     for ticker in ticker_list:
-        data = yf.download(ticker, start="2020-01-01", end="2024-12-31", auto_adjust=False, multi_level_index=False)
+        data = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False, multi_level_index=False)
         data.rename(columns={"Open": "open", "Low": "low", "High": "high", "Close": "close", "Adj Close": "adjusted_close", "Volume": "volume"}, inplace=True)
         data.insert(0, "ticker", ticker)
         data.insert(1, "date", data.index)
