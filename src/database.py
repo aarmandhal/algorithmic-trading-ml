@@ -1,8 +1,15 @@
-'''
-def create_database_connection(host, port, database, user, password):
-    # Create and return a database connection
-    pass
+import psycopg2
+from src.config import get_database_config
+from sqlalchemy import create_engine
+import pandas as pd
 
+
+def create_database_connection():
+    db_config = get_database_config
+    connection = db_config['database_url']
+    return connection
+
+'''
 def create_connection_pool(minconn, maxconn, host, port, database, user, password):
     # Create and return a connection pool
     pass
@@ -16,9 +23,11 @@ def create_indexes(conn):
     pass
 '''
 
-def insert_stock_data(conn, ticker, df):
+
+def insert_stock_data(conn, df):
     # Insert stock data into the database
-    pass
+    engine = create_engine(conn)
+    df.to_sql('stocks', engine, if_exists='append', index=False)
 
 def upsert_stock_data(conn, ticker, df):
     # Upsert stock data to avoid duplicates
