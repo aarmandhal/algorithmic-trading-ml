@@ -1,11 +1,12 @@
 import psycopg2
 from src.config import get_database_config
+from scripts.init_database import create_connection
 from sqlalchemy import create_engine
 import pandas as pd
 
 
-def create_database_connection():
-    db_config = get_database_config
+def create_engine_connection():
+    db_config = get_database_config()
     connection = db_config['database_url']
     return connection
 
@@ -26,20 +27,37 @@ def create_indexes(conn):
 
 def insert_stock_data(conn, df):
     # Insert stock data into the database
-    engine = create_engine(conn)
-    df.to_sql('stocks', engine, if_exists='append', index=False)
-
-def upsert_stock_data(conn, ticker, df):
-    # Upsert stock data to avoid duplicates
     pass
 
 def query_stock_data(conn, ticker, start_date, end_date):
     # Query stock data for a given ticker and date range
-    pass
+    query = """
+    SELECT ticker, date, open, low, high, close, adjusted_close, volume 
+    FROM stocks 
+    WHERE ticker = %(ticker)s 
+    AND date BETWEEN %(start)s AND %(end)s
+    """
+    params = {'ticker': ticker, "start": start_date, 'end': end_date}
+    results = pd.read_sql(sql=query, con=conn, params=params)
+    return results
+    
 
 def query_latest_date(conn, ticker):
     # Query the latest date for which data is available for a ticker
-    pass
+    cur = conn.cursor()
+    query = """
+    SELECT date
+    FROM stocks
+    WHERE ticker = %s
+    ORDER BY date
+    DESC 
+    LIMIT 1
+    """
+    cur.execute(query, (ticker, ))
+    date = cur.fetchone()
+    date = date[0]
+    cur.close()
+    return date
 
 def execute_vacuum(conn):
     # Perform database vacuuming to optimize performance

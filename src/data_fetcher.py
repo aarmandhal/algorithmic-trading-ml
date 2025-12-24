@@ -6,10 +6,9 @@ def fetch_stock_data(ticker, start_date, end_date):
     # Use yfinance
     # Return OHLCV dataframe
     data = yf.download(ticker, start=start_date, end=end_date)
-    data.rename(columns={"Open": "open", "Low": "low", "High": "high", "Close": "close", "Adj Close": "adjusted_close", "Volume": "volume"}, inplace=True)
+    data = data.reset_index()
+    data.rename(columns={"Open": "open", "Low": "low", "High": "high", "Close": "close", "Adj Close": "adjusted_close", "Volume": "volume", "Date": "date"})
     data.insert(0, "ticker", ticker)
-    data.insert(1, "date", data.index)
-    data.reset_index(drop=True, inplace=True)
     return data
 
 def fetch_multiple_tickers(ticker_list, start_date, end_date):
@@ -17,13 +16,9 @@ def fetch_multiple_tickers(ticker_list, start_date, end_date):
     # Dataframe with data from all tickers
     dfs = []
     for ticker in ticker_list:
-        data = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False, multi_level_index=False)
-        data.rename(columns={"Open": "open", "Low": "low", "High": "high", "Close": "close", "Adj Close": "adjusted_close", "Volume": "volume"}, inplace=True)
-        data.insert(0, "ticker", ticker)
-        data.insert(1, "date", data.index)
+        data = fetch_stock_data(ticker, start_date, end_date)
         dfs.append(data)
     data = pd.concat(dfs)
-    data.reset_index(drop=True, inplace=True)
     return data
 
 def validate_ticker(ticker):
