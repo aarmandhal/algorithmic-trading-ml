@@ -103,7 +103,24 @@ def get_date_range(conn, ticker):
         cur.close()
         conn.close()
         
-
+def delete_ticker_data(conn, ticker):
+    cur = conn.cursor()
+    query = """
+        DELETE FROM stocks
+        WHERE ticker = %s
+    """
+    try:
+        cur.execute(query, (ticker, ))
+        deleted = cur.rowcount
+        conn.commit()
+        print(f"Deleted {deleted} rows from database for ticker symbol {ticker}")
+    except Exception as e:
+        conn.rollback()
+        print(f"Error in deletion, Error: {e}")
+        return 0
+    finally:
+        cur.close()
+        conn.close()   
 
 def execute_vacuum(conn):
     # Perform database vacuuming to optimize performance
