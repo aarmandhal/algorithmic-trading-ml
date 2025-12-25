@@ -10,32 +10,40 @@ def create_engine_connection():
     connection = db_config['database_url']
     return connection
 
-'''
-def create_connection_pool(minconn, maxconn, host, port, database, user, password):
-    # Create and return a connection pool
-    pass
-
-def create_tables(conn):
-    # Create necessary tables if they don't exist
-    pass
-
-def create_indexes(conn):
-    # Create indexes to optimize queries
-    pass
-'''
-
-
 def insert_stock_data(conn, df):
-    # Insert stock data into the database
-    pass
+    if df.empty:
+        print("Dataframe is empty")
+        return 0
+    
+    try:
+        num_rows = df.shape[0]
+        df.to_sql('temp_table', conn, if_exists='replace', index=False)
+        
+        cur = conn.cursor()
+        query = """
+            INSERT INTO stocks (ticker, date, open, high, low, close, adjusted_close, volume)
+            SELECT ticker, date, open, high, low, close, adjusted_close, volume
+            FROM temp_insert
+            ON CONFLICT (ticker, date) DO NOTHING
+        """
+        cur.execute(query)
+        cur.execute("DROP TABLE IF EXISTS temp_table")
+        print(f"Number of rows inserted into Database {num_rows}")
+    except Exception as e:
+        print(f"Error in inserting data, Error: {e}")
+        return 0
+    finally:
+        conn.commit()
+        cur.close()
+        conn.close()
 
 def query_stock_data(conn, ticker, start_date, end_date):
     # Query stock data for a given ticker and date range
     query = """
-    SELECT ticker, date, open, low, high, close, adjusted_close, volume 
-    FROM stocks 
-    WHERE ticker = %(ticker)s 
-    AND date BETWEEN %(start)s AND %(end)s
+        SELECT ticker, date, open, low, high, close, adjusted_close, volume 
+        FROM stocks 
+        WHERE ticker = %(ticker)s 
+        AND date BETWEEN %(start)s AND %(end)s
     """
     params = {'ticker': ticker, "start": start_date, 'end': end_date}
     results = pd.read_sql(sql=query, con=conn, params=params)
@@ -46,18 +54,56 @@ def query_latest_date(conn, ticker):
     # Query the latest date for which data is available for a ticker
     cur = conn.cursor()
     query = """
-    SELECT date
-    FROM stocks
-    WHERE ticker = %s
-    ORDER BY date
-    DESC 
-    LIMIT 1
+        SELECT date
+        FROM stocks
+        WHERE ticker = %s
+        ORDER BY date
+        DESC 
+        LIMIT 1
     """
-    cur.execute(query, (ticker, ))
-    date = cur.fetchone()
-    date = date[0]
-    cur.close()
-    return date
+    try:
+        cur.execute(query, (ticker, ))
+        date = cur.fetchone()
+        
+        if date:
+            return date[0]
+        else:
+            return None
+    finally:
+        conn.commit()
+        cur.close()
+        conn.close()
+
+def get_all_ticker(conn):
+    query = """
+        SELECT DISTINCT ticker
+        FROM stocks
+        ORDER BY ticker
+    """
+    df = pd.read_sql(query, conn)
+    return df['ticker'].tolist()
+
+def get_date_range(conn, ticker):
+    cur = conn.cursor()
+    query = """
+        SELECT MIN(date) as start_date, MAX (date) as end_date
+        FROM stocks
+        WHERE ticker = %s
+    """
+    try:
+        cur.execute(query, (ticker, ))
+        results = cur.fetchone()
+        
+        if results:
+            return results[0], results[1]
+        else:
+            return None, None
+    finally:
+        conn.commit()
+        cur.close()
+        conn.close()
+        
+
 
 def execute_vacuum(conn):
     # Perform database vacuuming to optimize performance
