@@ -43,7 +43,7 @@ def insert_stock_data(engine, df):
     print(f"Attempted insert of {len(df)} rows")
     return len(df)
 
-def query_stock_data(conn, ticker, start_date, end_date):
+def query_stock_data(engine, ticker, start_date, end_date):
     # Query stock data for a given ticker and date range
     query = """
         SELECT ticker, date, open, low, high, close, adjusted_close, volume 
@@ -52,7 +52,7 @@ def query_stock_data(conn, ticker, start_date, end_date):
         AND date BETWEEN %(start)s AND %(end)s
     """
     params = {'ticker': ticker, "start": start_date, 'end': end_date}
-    results = pd.read_sql(sql=query, con=conn, params=params)
+    results = pd.read_sql(sql=query, con=engine, params=params)
     return results
     
 
@@ -80,13 +80,13 @@ def query_latest_date(conn, ticker):
         cur.close()
         conn.close()
 
-def get_all_ticker(conn):
+def get_all_ticker(engine):
     query = """
         SELECT DISTINCT ticker
         FROM stocks
         ORDER BY ticker
     """
-    df = pd.read_sql(query, conn)
+    df = pd.read_sql(query, engine)
     return df['ticker'].tolist()
 
 def get_date_range(conn, ticker):
