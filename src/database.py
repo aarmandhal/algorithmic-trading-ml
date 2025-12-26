@@ -114,6 +114,7 @@ def delete_ticker_data(conn, ticker):
         deleted = cur.rowcount
         conn.commit()
         print(f"Deleted {deleted} rows from database for ticker symbol {ticker}")
+        return deleted
     except Exception as e:
         conn.rollback()
         print(f"Error in deletion, Error: {e}")
