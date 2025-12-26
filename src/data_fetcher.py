@@ -6,14 +6,9 @@ def fetch_stock_data(ticker, start_date, end_date):
     # Use yfinance
     # Return OHLCV dataframe
     try:
-        data = yf.download(ticker, start=start_date, end=end_date)
-        
-        if data.isempty:
-            print(f"No data found for ticker: {ticker}")
-            return pd.DataFrame()
-        
+        data = yf.download(ticker, start=start_date, end=end_date, auto_adjust=False, progress=False,  multi_level_index=False)    
         data = data.reset_index()
-        data.rename(columns={"Open": "open", "Low": "low", "High": "high", "Close": "close", "Adj Close": "adjusted_close", "Volume": "volume", "Date": "date"})
+        data.rename(columns={"Open": "open", "Low": "low", "High": "high", "Close": "close", "Adj Close": "adjusted_close", "Volume": "volume", "Date": "date"}, inplace=True)
         data.insert(0, "ticker", ticker)
         return data
     except Exception as e:
@@ -24,16 +19,10 @@ def fetch_multiple_tickers(ticker_list, start_date, end_date):
     # Fetch data for multiple tickers and concatenate
     # Dataframe with data from all tickers
     dfs = []
-    invalid_tickers = []
     for ticker in ticker_list:
-        valid_ticker = validate_ticker(ticker)
-        if valid_ticker:
-            data = fetch_stock_data(ticker, start_date, end_date)
-            dfs.append(data)
-        else:
-            invalid_tickers.append(ticker)    
+        data = fetch_stock_data(ticker, start_date, end_date)
+        dfs.append(data)  
     data = pd.concat(dfs, ignore_index=True)
-    print(f"Failed fetching data for the following ticker(s): {', '.join(invalid_tickers)}")
     return data
 
 def validate_ticker(ticker):

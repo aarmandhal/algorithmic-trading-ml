@@ -1,41 +1,47 @@
 import psycopg2
 from src.config import get_database_config
 from scripts.init_database import create_connection
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text, types
 import pandas as pd
 
 
 def create_engine_connection():
     db_config = get_database_config()
     connection = db_config['database_url']
-    return connection
+    engine = create_engine(connection)
+    return engine
 
-def insert_stock_data(conn, df):
+def insert_stock_data(engine, df):
     if df.empty:
         print("Dataframe is empty")
         return 0
     
-    try:
-        num_rows = df.shape[0]
-        df.to_sql('temp_table', conn, if_exists='replace', index=False)
-        
-        cur = conn.cursor()
-        query = """
-            INSERT INTO stocks (ticker, date, open, high, low, close, adjusted_close, volume)
-            SELECT ticker, date, open, high, low, close, adjusted_close, volume
-            FROM temp_insert
-            ON CONFLICT (ticker, date) DO NOTHING
-        """
-        cur.execute(query)
-        cur.execute("DROP TABLE IF EXISTS temp_table")
-        print(f"Number of rows inserted into Database {num_rows}")
-    except Exception as e:
-        print(f"Error in inserting data, Error: {e}")
-        return 0
-    finally:
-        conn.commit()
-        cur.close()
-        conn.close()
+    insert_query = text("""
+        INSERT INTO stocks (ticker, date, open, high, low, close, adjusted_close, volume)
+        SELECT t.ticker, t.date, t.open, t.high, t.low, t.close, t.adjusted_close, t.volume
+        FROM temp_table AS t
+        ON CONFLICT (ticker, date) DO NOTHING;
+    """)
+
+    with engine.begin() as conn:
+        df.to_sql( "temp_table", conn, if_exists="replace", index=False,   
+        dtype={
+            "ticker": types.String,
+            "date": types.Date,
+            "open": types.Float,
+            "high": types.Float,
+            "low": types.Float,
+            "close": types.Float,
+            "adjusted_close": types.Float,
+            "volume": types.BigInteger,
+        }
+    )
+
+        conn.execute(insert_query)
+        conn.execute(text("DROP TABLE IF EXISTS temp_table"))
+
+    print(f"Attempted insert of {len(df)} rows")
+    return len(df)
 
 def query_stock_data(conn, ticker, start_date, end_date):
     # Query stock data for a given ticker and date range

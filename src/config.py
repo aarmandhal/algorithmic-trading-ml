@@ -12,7 +12,7 @@ def load_environment_variables():
     DB_NAME = os.getenv("DB_NAME")
     DB_USER = os.getenv("DB_USER")
     DB_PASSWORD = os.getenv("DB_PASSWORD")
-    DATABASE_URL = f"postgresql+psycopg2://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
+    DATABASE_URL = f"postgresql+psycopg2://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
     environment_variables["host"] = DB_HOST
     environment_variables["port"] = DB_PORT
     environment_variables["name"] = DB_NAME
@@ -30,6 +30,7 @@ def get_database_config():
     db_configuration["name"] = environment_variables["name"]
     db_configuration["user"] = environment_variables["user"]
     db_configuration["password"] = environment_variables["password"]
+    db_configuration["database_url"] = environment_variables["database_url"]
     return db_configuration
 
 def get_database_url():
