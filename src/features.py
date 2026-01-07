@@ -1,5 +1,7 @@
 
 
+# === TREND INDICATORS ===
+# Functions that measure trend direction and strength
 
 def calculate_moving_average(df, window = [5, 10, 20, 50, 200]):
     # Calculate moving average
@@ -9,13 +11,22 @@ def calculate_exponential_moving_average(df, span):
     # Calculate EMA
     pass
 
+def calculate_macd(df, short_span=12, long_span=26, signal_span=9):
+    # Calculate MACD
+    pass
+
+# === MOMENTUM INDICATORS ===
+# Functions that measure speed of price changes
+
 def calculate_rsi(df, period=14):
     # Calculate Relative Strength Index
     pass
 
-def calculate_macd(df, short_span=12, long_span=26, signal_span=9):
-    # Calculate MACD
+def calculate_stochastic(df, period=14):
     pass
+
+# === VOLATILITY INDICATORS ===
+# Functions that measure price variability
 
 def calculate_bollinger_bands(df, window=20, num_std=2):
     # Calculate Bollinger Bands
@@ -24,6 +35,9 @@ def calculate_bollinger_bands(df, window=20, num_std=2):
 def calculate_atr(df, period=14):
     # Calculate Average True Range
     pass
+
+# === VOLUME INDICATORS ===
+# Functions that incorporate volume data
 
 def calculate_obv(df):
     # Calculate On-Balance Volume
@@ -61,8 +75,15 @@ def calculate_rolling_volatility(df, window=20):
     # Calculate Rolling Volatility
     pass
 
+# === HELPER FUNCTIONS ===
+# Supporting calculations used by multiple indicators
+
 def calculate_returns(df, period=[1, 3, 5, 10, 20]):
     # Calculate daily returns
+    pass
+
+def normalize_features(df):
+    # Normalize features using Min-Max or Z-score
     pass
 
 def calculate_log_returns(df):
@@ -77,9 +98,6 @@ def calculate_price_changes(df):
     # Calculate price changes over specified periods
     pass
 
-def normalize_features(df):
-    # Normalize features using Min-Max or Z-score
-    pass
 
 def handle_missing_values(df, method='forward_fill'):
     # Handle missing values
