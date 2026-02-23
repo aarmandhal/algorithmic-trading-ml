@@ -1,105 +1,99 @@
-def initalize_portfolio(initial_capital, positions):
-    # Initialize portfolio with cash and empty positions
-    pass
-
-def execute_trade(ticker, signal, price, quantity, timestampe):
-    # Execute buy/sell trade and update portfolio
-    pass
-
-def calculate_position_size(capital, price, risk_percentage):
-    # Calculate position size based on risk management
-    pass
-
-def update_portfolio(positions, current_prices):
-    # Update portfolio value based on current prices
-    pass
-
-def apply_transaction_costs(trade_value, cost_rate):
-    # Apply transaction costs to trade value
-    pass
-
-def apply_slippage(price, slippage_rate, direction):
-    # Adjust price for slippage
-    pass
-
-def check_sufficient_capital(capital, trade_cost):
-    # Check if there is enough capital to execute trade
-    pass
-
-def rebalance_portfolio(current_positions, target_positions):   
-    # Rebalance portfolio to target allocations
-    pass
+import pandas as pd
+import numpy as np
 
 class Backtester:
     # Object-oriented wrapper for backtesting operations
-    def __init__(self, initial_capital, transaction_costs, slippage):
-        # Initialize any parameters if needed
-        pass
+    def __init__(self, initial_capital=100000, transaction_cost=0.001, slippage=0.0005):
+        self.initial_capital = initial_capital
+        self.transaction_cost = transaction_cost
+        self.slippage = slippage
+        self.cash = initial_capital
+        self.positions = {} # {ticker: quantity}
+        self.trades = []
+        self.equity_curve = []
     
-    def run_backtest(self, signals_df, price_df, start_date, end_date):
-        # Run backtest over the signals and price data
-        pass
+    def run_backtest(self, signals, prices):
+        # signals: Series or DF with index=date, values=signal (1: buy, -1: sell, 0: hold)
+        # prices: Series or DF with index=date, values=price
+        
+        self.cash = self.initial_capital
+        self.positions = {}
+        self.trades = []
+        self.equity_curve = []
+        
+        dates = signals.index
+        
+        for date in dates:
+            signal = signals.loc[date]
+            price = prices.loc[date]
+            
+            # 1. Execute Signal
+            if signal == 1: # Buy
+                self.execute_trade(date, 'BUY', price)
+            elif signal == -1: # Sell
+                self.execute_trade(date, 'SELL', price)
+            
+            # 2. Record Equity
+            total_value = self.calculate_portfolio_value(date, price)
+            self.equity_curve.append({'date': date, 'total_value': total_value})
+            
+        return pd.DataFrame(self.equity_curve).set_index('date')
 
-    def execute_signal(self, date, signal, price):
-        # Execute signals and update portfolio
-        pass
+    def execute_trade(self, date, side, price):
+        if side == 'BUY' and self.cash > 0:
+            # Simple position sizing: use all cash for one ticker (can be expanded)
+            # Adjust price for slippage
+            executed_price = price * (1 + self.slippage)
+            # Apply transaction cost
+            quantity = (self.cash * (1 - self.transaction_cost)) / executed_price
+            self.cash = 0
+            self.positions['portfolio'] = self.positions.get('portfolio', 0) + quantity
+            self.trades.append({'date': date, 'side': 'BUY', 'price': executed_price, 'quantity': quantity})
+            
+        elif side == 'SELL' and self.positions.get('portfolio', 0) > 0:
+            executed_price = price * (1 - self.slippage)
+            quantity = self.positions['portfolio']
+            # Receive cash minus transaction cost
+            self.cash = quantity * executed_price * (1 - self.transaction_cost)
+            self.positions['portfolio'] = 0
+            self.trades.append({'date': date, 'side': 'SELL', 'price': executed_price, 'quantity': quantity})
     
-    def update_positions(self, date):
-        # Update positions based on price changes
-        pass
+    def calculate_portfolio_value(self, date, current_price):
+        portfolio_value = self.positions.get('portfolio', 0) * current_price
+        return self.cash + portfolio_value
     
-    def calculate_portfolio_value(self, date):
-        # Calculate total portfolio value
-        pass
-    
-    def record_trade(self, trade_details):
-        # Record trade details for analysis
-        pass
-    
-    def get_trade_history(self):
-        # Return trade history dataframe
-        pass    
-    
-    def get_equity_curve(self):
-        # Return equity curve dataframe
-        pass
-    
-def calculate_total_return(equity_curve):
-    # Calculate total return of the portfolio
-    pass
+    def get_performance_metrics(self):
+        equity_df = pd.DataFrame(self.equity_curve).set_index('date')
+        equity_df['returns'] = equity_df['total_value'].pct_change()
+        
+        total_return = (equity_df['total_value'].iloc[-1] / self.initial_capital) - 1
+        sharpe_ratio = (equity_df['returns'].mean() / equity_df['returns'].std()) * np.sqrt(252) if len(equity_df) > 1 and equity_df['returns'].std() != 0 else 0
+        
+        # Max Drawdown
+        equity_df['cum_max'] = equity_df['total_value'].cummax()
+        equity_df['drawdown'] = (equity_df['total_value'] / equity_df['cum_max']) - 1
+        max_drawdown = equity_df['drawdown'].min()
+        
+        # Win Rate and Profit Factor (assuming paired trades)
+        profits = []
+        for i in range(1, len(self.trades), 2):
+            buy = self.trades[i-1]
+            sell = self.trades[i]
+            if buy['side'] == 'BUY' and sell['side'] == 'SELL':
+                profit = (sell['price'] * sell['quantity']) - (buy['price'] * buy['quantity'])
+                profits.append(profit)
+        
+        win_rate = sum(1 for p in profits if p > 0) / len(profits) if profits else 0
+        
+        gross_profits = sum(p for p in profits if p > 0)
+        gross_losses = abs(sum(p for p in profits if p < 0))
+        profit_factor = gross_profits / gross_losses if gross_losses > 0 else (gross_profits if gross_profits > 0 else 0)
 
-def calculate_annualized_return(equity_curve, periods_per_year):
-    # Calculate annualized return
-    pass
-
-def calculate_sharpe_ratio(returns, risk_free_rate=0.02):
-    # Calculate Sharpe Ratio
-    pass
-
-def calculate_sortino_ratio(returns, target_return=0):
-    # Calculate Sortino Ratio
-    pass
-
-def calculate_max_drawdown(equity_curve):
-    # Calculate Maximum Drawdown
-    pass
-
-def calculate_calmar_ratio(returns, max_drawdown):
-    # Calculate Calmar Ratio
-    pass
-
-def calculate_win_rate(trades):
-    # Calculate Win Rate of trades
-    pass
-
-def calculate_profit_factor(trades):
-    # Calculate Profit Factor
-    pass
-
-def calculate_average_win_loss(trades):
-    # Calculate Average Win/Loss
-    pass
-
-def calculate_recovery_time(equity_curve):
-    # Calculate Recovery Time from drawdowns
-    pass
+        return {
+            'total_return': total_return,
+            'sharpe_ratio': sharpe_ratio,
+            'max_drawdown': max_drawdown,
+            'win_rate': win_rate,
+            'profit_factor': profit_factor,
+            'trades_count': len(self.trades)
+        }

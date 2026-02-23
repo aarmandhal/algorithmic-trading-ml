@@ -161,6 +161,17 @@ def create_tables():
     
 def create_indexes():
     # Create indexes to optimize database queries
-    pass
+    conn = create_connection()
+    cur = conn.cursor()
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_stocks_ticker ON stocks(ticker);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_stocks_date ON stocks(date);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_features_ticker ON features(ticker);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_features_date ON features(date);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_predictions_ticker ON model_predictions(ticker);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_predictions_date ON model_predictions(date);")
+    cur.execute("CREATE INDEX IF NOT EXISTS idx_trades_backtest_id ON trades(backtest_run_id);")
+    conn.commit()
+    cur.close()
+    conn.close()
 
 create_tables()

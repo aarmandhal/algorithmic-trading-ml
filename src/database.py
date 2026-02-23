@@ -80,7 +80,7 @@ def query_latest_date(conn, ticker):
         cur.close()
         conn.close()
 
-def get_all_ticker(engine):
+def get_all_tickers(engine):
     query = """
         SELECT DISTINCT ticker
         FROM stocks
@@ -163,69 +163,63 @@ def enable_row_level_security(conn, table_name):
 
 class DatabaseManager:
     # Object-oriented wrapper for database operations
-    def __init__(self, host, port, database, user, password):
-        # Initialize connection parameters
-        pass
-    
+    def __init__(self):
+        # Initialize connection parameters from config
+        self.config = get_database_config()
+        self.engine = create_engine(self.config['database_url'])
+        self._connection = None
+
     def get_connection(self):
-        # Get a database connection from the pool
-        pass
+        # Get a database connection
+        if self._connection is None or self._connection.closed:
+            self._connection = psycopg2.connect(
+                dbname=self.config["name"],
+                user=self.config["user"],
+                password=self.config["password"],
+                host=self.config["host"],
+                port=self.config["port"]
+            )
+        return self._connection
     
-    def release_connection(self, conn):
-        # Release a database connection back to the pool
-        pass
+    def release_connection(self):
+        # Close the connection
+        if self._connection and not self._connection.closed:
+            self._connection.close()
+            self._connection = None
     
-    def connect(self):
-        # Establish connection
-        pass
-    
-    def disconnect(self):
-        # Close connection
-        pass
-    
-    def create_schema(self):
-        # Create a new schema in the database
-        pass
-    
-    def insert_data(self, table_name, df, method='multi'):
-        # Insert data method
-        pass
+    def insert_data(self, table_name, df, method='append'):
+        # Insert data method using SQLAlchemy
+        if df.empty:
+            return 0
+        try:
+            df.to_sql(table_name, self.engine, if_exists=method, index=False)
+            return len(df)
+        except Exception as e:
+            print(f"Error inserting data into {table_name}: {e}")
+            return 0
     
     def query_data(self, query, params=None):
-        # Query data method
-        pass
-    
-    def update_data(self, table_name, df, conflict_columns):
-        # Update data method
-        pass
-    
-    def delete_data(self, table_name, condition_dict):
-        # Delete data method
-        pass
-    
-    def execute_transaction(self, queries_list):
-        # Execute multiple queries in a transaction
-        pass
-    
+        # Query data method using pandas and SQLAlchemy
+        try:
+            return pd.read_sql(query, self.engine, params=params)
+        except Exception as e:
+            print(f"Error querying data: {e}")
+            return pd.DataFrame()
+
     def execute_raw_sql(self, sql, params=None):
         # Execute raw SQL command
-        pass
-    
-    def get_connection_stats(self):
-        # Get connection pool statistics
-        pass
-    
-    def backup_table(self, table_name, backup_path):
-        # Backup a specific table
-        pass
-    
-    def analyze_table(self, table_name):
-        # Analyze a table for query optimization
-        pass
-    
-    def monitor_performance(self):
-        # Monitor database performance metrics
-        pass
+        conn = self.get_connection()
+        cur = conn.cursor()
+        try:
+            cur.execute(sql, params)
+            conn.commit()
+            return cur.rowcount
+        except Exception as e:
+            conn.rollback()
+            print(f"Error executing raw SQL: {e}")
+            return 0
+        finally:
+            cur.close()
     
 class TimeSeriesDB:
     # Specialized class for time-series data operations

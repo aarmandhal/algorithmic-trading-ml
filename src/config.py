@@ -35,13 +35,18 @@ def get_database_config():
 
 def get_database_url():
     # Construct database URL from config
-    pass
+    config = get_database_config()
+    return config["database_url"]
 
 def get_connection_pool_size():
     # Get connection pool size from env or default
-    pass
+    return int(os.getenv("DB_POOL_SIZE", "5"))
 
 def validate_database_config():
     # Validate required database config parameters
-    pass
+    required_keys = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"]
+    missing = [key for key in required_keys if not os.getenv(key)]
+    if missing:
+        raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+    return True
 
